@@ -1,3 +1,5 @@
 tmp/
 *.db
 *.exe
+*railway*
+app

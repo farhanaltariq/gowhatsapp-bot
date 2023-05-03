@@ -7,17 +7,13 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/mdp/qrterminal/v3"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/binary/proto"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
-
-	// sqlite3 connector
-	_ "github.com/mattn/go-sqlite3"
-
-	// qrencode for QR code rendering
-	"github.com/mdp/qrterminal/v3"
+	_ "modernc.org/sqlite"
 )
 
 func eventHandler(client *whatsmeow.Client, evt interface{}) {
@@ -89,18 +85,18 @@ func connect(client *whatsmeow.Client) error {
 
 func main() {
 	dbLog := waLog.Stdout("Database", "DEBUG", false)
-	// Make sure you add appropriate DB connector imports, e.g. github.com/mattn/go-sqlite3 for SQLite
-	container, err := sqlstore.New("sqlite3", "file:examplestore.db?_foreign_keys=on", dbLog)
+	store, err := sqlstore.New("sqlite", "file:examplestore.db?_foreign_keys=on", dbLog)
 	if err != nil {
 		panic(err)
 	}
 	// If you want multiple sessions, remember their JIDs and use .GetDevice(jid) or .GetAllDevices() instead.
-	deviceStore, err := container.GetFirstDevice()
+	deviceStore, err := store.GetFirstDevice()
 	if err != nil {
 		panic(err)
 	}
 	clientLog := waLog.Stdout("Client", "DEBUG", true)
 	client := whatsmeow.NewClient(deviceStore, clientLog)
+
 	client.AddEventHandler(func(evt interface{}) {
 		eventHandler(client, evt)
 	})
