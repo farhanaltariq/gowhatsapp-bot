@@ -9,6 +9,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/mdp/qrterminal/v3 v3.0.0 // indirect
