@@ -24,16 +24,15 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 		if msg == "" {
 			msg = v.Message.GetConversation()
 		}
-		fmt.Println("\033[32m MESSAGE RECEIVED : \033[0m", msg)
+
 		sender := v.Info.MessageSource.Chat
 		senderName := v.Info.PushName
 		if v.Info.IsFromMe || msg == "" {
 			return
 		}
 
-		fmt.Println(senderName, " | ", sender)
-		fmt.Println("Message : ", msg)
-
+		fmt.Println("\033[32mSender\t:", senderName, " | ", sender, "\033[0m")
+		fmt.Println("\033[32mMessage\t:", msg, "\033[0m")
 		// reply message
 		protoMsg := &proto.Message{
 			ExtendedTextMessage: &proto.ExtendedTextMessage{
