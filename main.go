@@ -21,6 +21,10 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 	case *events.Message:
 		// if not from me and not empty
 		msg := v.Message.ExtendedTextMessage.GetText()
+		if msg == "" {
+			msg = v.Message.GetConversation()
+		}
+		fmt.Println("\033[32m MESSAGE RECEIVED : \033[0m", msg)
 		sender := v.Info.MessageSource.Chat
 		senderName := v.Info.PushName
 		if v.Info.IsFromMe || msg == "" {
