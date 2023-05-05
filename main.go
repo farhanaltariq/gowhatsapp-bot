@@ -28,7 +28,8 @@ func main() {
 	client := whatsmeow.NewClient(deviceStore, clientLog)
 
 	client.AddEventHandler(func(evt interface{}) {
-		utils.EventHandler(client, evt)
+		// set to true to not send result to client
+		utils.EventHandler(client, evt, false)
 	})
 
 	err = utils.ConnectDB(client)

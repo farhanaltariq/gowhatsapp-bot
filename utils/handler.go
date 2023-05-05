@@ -76,12 +76,12 @@ func hitAI(msg string) string {
 		fmt.Println(err)
 	}
 	msg = response.Choices[0].Message.Content
-	fmt.Println("\033[31", response, "\033[0m")
+	fmt.Println("\033[32", response, "\033[0m")
 
 	return msg
 }
 
-func EventHandler(client *whatsmeow.Client, evt interface{}) {
+func EventHandler(client *whatsmeow.Client, evt interface{}, debug bool) {
 	switch v := evt.(type) {
 	case *events.Message:
 		// if not from me and not empty
@@ -98,15 +98,17 @@ func EventHandler(client *whatsmeow.Client, evt interface{}) {
 
 		fmt.Println("\033[32mSender\t:", senderName, " | ", sender, "\033[0m")
 		fmt.Println("\033[32mMessage\t:", msg, "\033[0m")
-		// reply message
-		msg = hitAI(msg)
-		protoMsg := &proto.Message{
-			ExtendedTextMessage: &proto.ExtendedTextMessage{
-				// text to be send to sender
-				Text: &msg,
-			},
+		if !debug {
+			// reply message
+			msg = hitAI(msg)
+			protoMsg := &proto.Message{
+				ExtendedTextMessage: &proto.ExtendedTextMessage{
+					// text to be send to sender
+					Text: &msg,
+				},
+			}
+			client.SendMessage(context.Background(), sender, protoMsg)
 		}
-		fmt.Println(hitAI(msg))
-		client.SendMessage(context.Background(), sender, protoMsg)
+
 	}
 }
