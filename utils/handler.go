@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	utils "hanz/ai/utils/env"
 	"net/http"
 
 	"go.mau.fi/whatsmeow"
@@ -46,7 +45,7 @@ type ResponseGPT struct {
 
 func hitAI(msg string) string {
 	url := "https://api.openai.com/v1/chat/completions"
-	apiKey := utils.LoadEnv()
+	apiKey := LoadEnv()
 
 	payload := Request{
 		Model:       "gpt-3.5-turbo",
