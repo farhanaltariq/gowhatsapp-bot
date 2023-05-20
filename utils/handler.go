@@ -64,11 +64,11 @@ func hitAI(msg string, sender interface{}, responseChan chan<- string, wg *sync.
 	url := "https://api.openai.com/v1/chat/completions"
 	apiKey := LoadEnv()
 
-	reqMsg := SavedMessage.data[sender] + "\n]},\ncurrent_message : " + msg
+	reqMsg := SavedMessage.data[sender] + "]\n" + msg
 	if SavedMessage.data[sender] != "" {
-		SavedMessage.data[sender] = SavedMessage.data[sender] + "\n{\nmessage : " + msg
+		SavedMessage.data[sender] = SavedMessage.data[sender] + "\nmessage : " + msg
 	} else {
-		SavedMessage.data[sender] = "previous_messages : {[\n{\nmessage : " + msg
+		SavedMessage.data[sender] = "\nprevious_messages : [\nmessage : " + msg
 		reqMsg = msg
 	}
 
@@ -117,7 +117,7 @@ func hitAI(msg string, sender interface{}, responseChan chan<- string, wg *sync.
 	msg = response.Choices[0].Message.Content
 	fmt.Println("\033[34m", msg, "\033[0m")
 
-	SavedMessage.data[sender] = SavedMessage.data[sender] + ",\nanswer : " + msg + "\n},\n"
+	SavedMessage.data[sender] = SavedMessage.data[sender] + "\nanswer : " + msg + "\n"
 
 	responseChan <- msg // Send the AI response
 }
