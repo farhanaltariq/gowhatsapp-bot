@@ -19,28 +19,37 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	// If you want multiple sessions, remember their JIDs and use .GetDevice(jid) or .GetAllDevices() instead.
 	deviceStore, err := store.GetFirstDevice()
 	if err != nil {
 		panic(err)
 	}
+
 	clientLog := waLog.Stdout("Client", "DEBUG", true)
 	client := whatsmeow.NewClient(deviceStore, clientLog)
 
-	client.AddEventHandler(func(evt interface{}) {
-		// set to true to not send result to client
-		utils.EventHandler(client, evt, false)
-	})
+	// Use a channel to receive signals for graceful shutdown
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
-	err = utils.ConnectDB(client)
-	if err != nil {
-		panic(err)
-	}
+	// Start the database connection concurrently
+	go func() {
+		err = utils.ConnectDB(client)
+		if err != nil {
+			panic(err)
+		}
+	}()
 
-	// Listen to Ctrl+C (you can also do something else that prevents the program from exiting)
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	<-c
+	// Start the event handling concurrently
+	go func() {
+		client.AddEventHandler(func(evt interface{}) {
+			// set to true to not send result to client
+			utils.EventHandler(client, evt, false)
+		})
+	}()
+
+	<-stop // Wait for the stop signal
 
 	client.Disconnect()
 }

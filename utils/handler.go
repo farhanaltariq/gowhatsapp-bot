@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/binary/proto"
@@ -43,7 +44,9 @@ type ResponseGPT struct {
 	} `json:"choices"`
 }
 
-func hitAI(msg string) string {
+func hitAI(msg string, responseChan chan<- string, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	url := "https://api.openai.com/v1/chat/completions"
 	apiKey := LoadEnv()
 
@@ -58,6 +61,8 @@ func hitAI(msg string) string {
 	req, err := http.NewRequest("POST", url, jsonPayload)
 	if err != nil {
 		fmt.Println(err)
+		responseChan <- "" // Send empty response on error
+		return
 	}
 
 	req.Header.Set("Authorization", "Bearer "+apiKey)
@@ -67,17 +72,27 @@ func hitAI(msg string) string {
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
+		responseChan <- "" // Send empty response on error
+		return
 	}
 	defer resp.Body.Close()
 
 	response := ResponseGPT{}
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		fmt.Println(err)
+		responseChan <- "" // Send empty response on error
+		return
 	}
 	msg = response.Choices[0].Message.Content
-	fmt.Println("\033[32", response, "\033[0m")
+	fmt.Println("\033[32", msg, "\033[0m")
 
-	return msg
+	if len(response.Choices) < 1 {
+		// say if can't find any response
+		responseChan <- "Sorry, I don't understand what you mean"
+		return
+	}
+
+	responseChan <- msg // Send the AI response
 }
 
 func EventHandler(client *whatsmeow.Client, evt interface{}, debug bool) {
@@ -97,17 +112,29 @@ func EventHandler(client *whatsmeow.Client, evt interface{}, debug bool) {
 
 		fmt.Println("\033[32mSender\t:", senderName, " | ", sender, "\033[0m")
 		fmt.Println("\033[32mMessage\t:", msg, "\033[0m")
-		if !debug {
-			// reply message
-			msg = hitAI(msg)
-			protoMsg := &proto.Message{
-				ExtendedTextMessage: &proto.ExtendedTextMessage{
-					// text to be send to sender
-					Text: &msg,
-				},
-			}
-			client.SendMessage(context.Background(), sender, protoMsg)
-		}
 
+		if !debug {
+			responseChan := make(chan string, 1)
+			var wg sync.WaitGroup
+			wg.Add(1)
+
+			go hitAI(msg, responseChan, &wg)
+
+			// Wait for the AI response concurrently
+			go func() {
+				wg.Wait() // Wait for the AI processing to complete
+				close(responseChan)
+				msg, ok := <-responseChan
+				if ok && msg != "" {
+					protoMsg := &proto.Message{
+						ExtendedTextMessage: &proto.ExtendedTextMessage{
+							// text to be sent to the sender
+							Text: &msg,
+						},
+					}
+					client.SendMessage(context.Background(), sender, protoMsg)
+				}
+			}()
+		}
 	}
 }
