@@ -75,7 +75,7 @@ func hitAI(msg string, sender interface{}, responseChan chan<- string, wg *sync.
 	fmt.Print("\033[31m\n", reqMsg, "\033[0m\n\n")
 
 	payload := Request{
-		Model:       "gpt-3.5-turbo-0301",
+		Model:       "gpt-4",
 		Messages:    []Message{{Role: "user", Content: reqMsg}},
 		Temperature: 0.7,
 	}
