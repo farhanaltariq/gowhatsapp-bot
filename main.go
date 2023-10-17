@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -47,6 +49,16 @@ func main() {
 			// set to true to not send result to client
 			utils.EventHandler(client, evt, false)
 		})
+	}()
+
+	// run healthcheck endpoint
+	go func() {
+		http.HandleFunc("/", utils.HealthCheck)
+		err := http.ListenAndServe(":8080", nil)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("Healthcheck endpoint running at port :8080")
 	}()
 
 	<-stop // Wait for the stop signal

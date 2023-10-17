@@ -52,6 +52,11 @@ var SavedMessage = savedMessage{
 	data: make(map[interface{}]string),
 }
 
+func HealthCheck(w http.ResponseWriter, r *http.Request) {
+	// print the message to the webpage
+	fmt.Fprintf(w, "Application Running !")
+}
+
 func hitAI(msg string, sender interface{}, responseChan chan<- string, wg *sync.WaitGroup) {
 	defer wg.Done()
 
@@ -75,7 +80,7 @@ func hitAI(msg string, sender interface{}, responseChan chan<- string, wg *sync.
 	fmt.Print("\033[31m\n", reqMsg, "\033[0m\n\n")
 
 	payload := Request{
-		Model:       "gpt-4",
+		Model:       "gpt-3.5-turbo-16k",
 		Messages:    []Message{{Role: "user", Content: reqMsg}},
 		Temperature: 0.7,
 	}
